@@ -1,0 +1,10 @@
+{
+  "name": "ShardDustryCore",
+  "author": "Vector",
+  "main": "ShardDustry.ShardDustry",
+  "description": "Un plugin.",
+  "version": 1.0,
+  "dependencies": [
+    "xpdustry-javelin"
+  ]
+}

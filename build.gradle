@@ -1,0 +1,53 @@
+apply plugin: "java"
+
+version '1.0'
+
+sourceCompatibility = JavaVersion.VERSION_17
+
+sourceSets.main.java.srcDirs = ["src"]
+
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+
+repositories{
+    mavenCentral()
+    maven{ url "https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository" }
+    maven{ url 'https://www.jitpack.io' }
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    // If you want to use the snapshots, replace the uri with "https://maven.xpdustry.com/snapshots"
+    maven { url = uri("https://maven.xpdustry.com/releases") }
+}
+
+ext{
+    //the build number that this plugin is made for
+    mindustryVersion = 'v146'
+    jabelVersion = "93fde537c7"
+}
+
+//java 8 backwards compatibility flag
+allprojects{
+    tasks.withType(JavaCompile){
+        options.compilerArgs.addAll(['--release', '8'])
+    }
+}
+
+dependencies{
+    compileOnly "com.github.Anuken.Arc:arc-core:$mindustryVersion"
+    compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
+    annotationProcessor "com.github.Anuken:jabel:$jabelVersion"
+    implementation("net.dv8tion:JDA:5.0.0-beta.13")
+    implementation 'com.google.code.gson:gson:2.10.1'
+    compileOnly("fr.xpdustry:javelin-mindustry:1.2.0")
+}
+
+jar{
+    archiveFileName = "${project.archivesBaseName}.jar"
+    from{
+        configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
+    }
+
+    from(rootDir){
+        include "plugin.json"
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
