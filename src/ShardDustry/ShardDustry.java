@@ -111,7 +111,7 @@ public class ShardDustry extends Plugin{
         });
         handler.register("reload-shardustry-config", "Actualiza la configuracion de shardustry", args -> {
            try {
-               config = gson.fromJson(dataDirectory.child("mods/ShardDustry/ShardDustryCore.json").readString(), Config.class);
+               config = gson.fromJson(dataDirectory.child("mods/ShardDustryCore.json").readString(), Config.class);
            } catch (Throwable t){
                Log.err("Hubo un error al cargar el archivo de configuracion");
                Log.err(t);
