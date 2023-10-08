@@ -149,6 +149,8 @@ gradle-app.setting
 /html/build/
 /ios/build/
 /ios-moe/build/
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
 
 ## OS Specific
 .DS_Store
