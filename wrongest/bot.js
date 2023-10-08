@@ -14,3 +14,5 @@ client.on("message", msg => {
 })
 
 client.login(process.env.TOKEN)
+
+TOKEN= [NzU1ODc5OTIyNjY4NDA0Nzk2.GK4Po8.3Ao_ywcqfUoqsK5TBMF5k_OKZbdNZL4jFQKCz0]
