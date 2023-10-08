@@ -46,31 +46,50 @@ public class ShardDustry extends Plugin{
             }
         }
         
-        JavelinSocket socket = JavelinPlugin.getJavelinSocket();
-
-        Events.on(PlayerChatEvent.class, event -> {
-            if (socket.getStatus() == JavelinSocket.Status.OPEN) {
-                socket.sendEvent(new JavelinChatEvent(event.message));
-            }
-        });
-        socket.subscribe(JavelinChatEvent.class, e -> {
-            Log.info("Informacion recibida a travez de Javelin: " + e.getChannel());
-        });
-        
         DiscordBot bot = new DiscordBot();
         if (config.activeDiscordBot) {
             bot.init();
         }
-        Events.on(PlayerJoin.class, event-> {
+        
+        JavelinSocket socket = JavelinPlugin.getJavelinSocket();
+
+        socket.subscribe(MindustryChatEvent.class, e -> {
             if (config.activeDiscordBot){
-                bot.bot.getTextChannelById("1124859863483306087").sendMessage("El idiota de " + event.player.name + " se ha unido al servidor").queue();
+                String parser = e.getDisplayMessage();
+                if (parser.contains("{p}")){
+                    parser = parser.replace("{p}", e.getPlayerName());
+                }
+                if (parser.contains("{m}")){
+                    parser = parser.replace("{m}", e.getMessage());
+                }
+                bot.bot.getTextChannelById(e.getChannelID()).sendMessage(parser).queue();
             }
         });
-        Events.on(PlayerChatEvent.class, event -> {
-            if (config.activeDiscordBot && !event.message.startsWith("/")) {
-                bot.bot.getTextChannelById("1124859863483306087").sendMessage(event.player.name + ": " + event.message).queue();
+        socket.subscribe(MindustryLeaveEvent.class, e -> {
+            if (config.activeDiscordBot) {
+                String parser = e.getDisplayMessage();
+                if (parser.contains("{p}")){
+                    parser = parser.replace("{p}", e.getPlayerName());
+                }
+                if (parser.contains("{pc}")){
+                    parser = parser.replace("{pc}", e.getPlayerCount()+"");
+                }
+                bot.bot.getTextChannelById(e.getChannelID()).sendMessage(parser).queue();
             }
         });
+        socket.subscribe(MindustryJoinEvent.class, e -> {
+            if (config.activeDiscordBot) {
+                String parser = e.getDisplayMessage();
+                if (parser.contains("{p}")){
+                    parser = parser.replace("{p}", e.getPlayerName());
+                }
+                if (parser.contains("{pc}")){
+                    parser = parser.replace("{pc}", e.getPlayerCount()+"");
+                }
+                bot.bot.getTextChannelById(e.getChannelID()).sendMessage(parser).queue();
+            }
+        });
+        
         //listen for a block selection event
         Events.on(BuildSelectEvent.class, event -> {
             if(!event.breaking && event.builder != null && event.builder.buildPlan() != null && event.builder.buildPlan().block == Blocks.thoriumReactor && event.builder.isPlayer()){
@@ -143,16 +162,97 @@ public class ShardDustry extends Plugin{
             other.sendMessage("[lightgray](whisper) " + player.name + ":[] " + args[1]);
         });
     }
-    public static final class JavelinChatEvent implements JavelinEvent {
+    
+    public static final class MindustryChatEvent implements JavelinEvent {
 
-        private final String channel;
+        private final String channelID;
+        private final String playerName;
+        private final String message;
+        private final String displayMessage;
 
-        public JavelinChatEvent(final String channel) {
-            this.channel = channel;
+        public MindustryChatEvent(final String channelID, final String playerName, final String message, final String displayMessage) {
+            this.channelID = channelID;
+            this.playerName = playerName;
+            this.message = message;
+            this.displayMessage = displayMessage;
         }
 
-        public String getChannel() {
-            return channel;
+        public String getChannelID() {
+            return channelID;
+        }
+
+        public String getDisplayMessage() {
+            return displayMessage;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public String getPlayerName() {
+            return playerName;
+        }
+    }
+
+    public static final class MindustryLeaveEvent implements JavelinEvent {
+
+        private final String channelID;
+        private final String playerName;
+        private final String displayMessage;
+        private final int playerCount;
+
+        public MindustryLeaveEvent(final String channelID, final String playerName, final String displayMessage, final int playerCount) {
+            this.channelID = channelID;
+            this.playerName = playerName;
+            this.displayMessage = displayMessage;
+            this.playerCount = playerCount;
+        }
+
+        public String getChannelID() {
+            return channelID;
+        }
+
+        public String getDisplayMessage() {
+            return displayMessage;
+        }
+
+        public String getPlayerName() {
+            return playerName;
+        }
+
+        public int getPlayerCount() {
+            return playerCount;
+        }
+    }
+
+    public static final class MindustryJoinEvent implements JavelinEvent {
+
+        private final String channelID;
+        private final String playerName;
+        private final int playerCount;
+        private final String displayMessage;
+
+        public MindustryJoinEvent(final String channelID, final String playerName, final String displayMessage, final int playerCount) {
+            this.channelID = channelID;
+            this.playerName = playerName;
+            this.displayMessage = displayMessage;
+            this.playerCount = playerCount;
+        }
+
+        public String getChannelID() {
+            return channelID;
+        }
+
+        public String getDisplayMessage() {
+            return displayMessage;
+        }
+
+        public String getPlayerName() {
+            return playerName;
+        }
+
+        public int getPlayerCount() {
+            return playerCount;
         }
     }
 }
