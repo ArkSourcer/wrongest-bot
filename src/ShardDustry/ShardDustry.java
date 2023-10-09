@@ -55,7 +55,7 @@ public class ShardDustry extends Plugin{
 
         socket.subscribe(MindustryChatEvent.class, e -> {
             if (config.activeDiscordBot){
-                String parser = e.getDisplayMessage();
+                String parser = config.chatMessage;
                 if (parser.contains("{p}")){
                     parser = parser.replace("{p}", e.getPlayerName());
                 }
@@ -67,7 +67,7 @@ public class ShardDustry extends Plugin{
         });
         socket.subscribe(MindustryLeaveEvent.class, e -> {
             if (config.activeDiscordBot) {
-                String parser = e.getDisplayMessage();
+                String parser = config.leaveMessage;
                 if (parser.contains("{p}")){
                     parser = parser.replace("{p}", e.getPlayerName());
                 }
@@ -79,7 +79,7 @@ public class ShardDustry extends Plugin{
         });
         socket.subscribe(MindustryJoinEvent.class, e -> {
             if (config.activeDiscordBot) {
-                String parser = e.getDisplayMessage();
+                String parser = config.joinMessage;
                 if (parser.contains("{p}")){
                     parser = parser.replace("{p}", e.getPlayerName());
                 }
@@ -163,26 +163,26 @@ public class ShardDustry extends Plugin{
         });
     }
     
+    public static void sendDiscordMessageEvent(String channelID, String message){
+        if (JavelinPlugin.getJavelinSocket().getStatus() == JavelinSocket.Status.OPEN){
+            JavelinPlugin.getJavelinSocket().sendEvent(new DiscordMessageEvent(channelID,message));
+        }
+    }
+    
     public static final class MindustryChatEvent implements JavelinEvent {
 
         private final String channelID;
         private final String playerName;
         private final String message;
-        private final String displayMessage;
 
-        public MindustryChatEvent(final String channelID, final String playerName, final String message, final String displayMessage) {
+        public MindustryChatEvent(final String channelID, final String playerName, final String message) {
             this.channelID = channelID;
             this.playerName = playerName;
             this.message = message;
-            this.displayMessage = displayMessage;
         }
 
         public String getChannelID() {
             return channelID;
-        }
-
-        public String getDisplayMessage() {
-            return displayMessage;
         }
 
         public String getMessage() {
@@ -198,22 +198,16 @@ public class ShardDustry extends Plugin{
 
         private final String channelID;
         private final String playerName;
-        private final String displayMessage;
         private final int playerCount;
 
-        public MindustryLeaveEvent(final String channelID, final String playerName, final String displayMessage, final int playerCount) {
+        public MindustryLeaveEvent(final String channelID, final String playerName, final int playerCount) {
             this.channelID = channelID;
             this.playerName = playerName;
-            this.displayMessage = displayMessage;
             this.playerCount = playerCount;
         }
 
         public String getChannelID() {
             return channelID;
-        }
-
-        public String getDisplayMessage() {
-            return displayMessage;
         }
 
         public String getPlayerName() {
@@ -230,21 +224,15 @@ public class ShardDustry extends Plugin{
         private final String channelID;
         private final String playerName;
         private final int playerCount;
-        private final String displayMessage;
 
-        public MindustryJoinEvent(final String channelID, final String playerName, final String displayMessage, final int playerCount) {
+        public MindustryJoinEvent(final String channelID, final String playerName, final int playerCount) {
             this.channelID = channelID;
             this.playerName = playerName;
-            this.displayMessage = displayMessage;
             this.playerCount = playerCount;
         }
 
         public String getChannelID() {
             return channelID;
-        }
-
-        public String getDisplayMessage() {
-            return displayMessage;
         }
 
         public String getPlayerName() {
@@ -253,6 +241,25 @@ public class ShardDustry extends Plugin{
 
         public int getPlayerCount() {
             return playerCount;
+        }
+    }
+    
+    public static final class DiscordMessageEvent implements JavelinEvent {
+        
+        private final String channelID;
+        private final String message;
+        
+        public DiscordMessageEvent(final String channelID, final String message) {
+            this.channelID = channelID;
+            this.message = message;
+        }
+        
+        public String getChannelID() {
+            return channelID;
+        }
+        
+        public String getMessage() {
+            return message;
         }
     }
 }

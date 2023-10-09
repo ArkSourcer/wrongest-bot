@@ -18,7 +18,6 @@ public class DiscordBot {
     
     public void init(){
         try {
-            
             bot = JDABuilder.createDefault(config.discordToken)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .setChunkingFilter(ChunkingFilter.ALL)
@@ -52,8 +51,22 @@ public class DiscordBot {
                     }
                 }
             }
-            if (!event.getAuthor().isBot() && event.getMessage().getChannel().getId().equals("1124859863483306087")){
-                Call.sendMessage(event.getAuthor().getName()+ ": " + event.getMessage().getContentRaw());
+            if (!event.getAuthor().isBot()) {
+                for (String id : config.connectionList) {
+                    if (id.equals(event.getChannel().getId())) {
+                        String parser = config.discordMessage;
+                        if (event.getMessage().getContentDisplay().isEmpty()) {
+                            return;
+                        }
+                        if (parser.contains("{a}")) {
+                            parser = parser.replace("{a}", event.getAuthor().getName());
+                        }
+                        if (parser.contains("{m}")) {
+                            parser = parser.replace("{m}", event.getMessage().getContentDisplay());
+                        }
+                        ShardDustry.sendDiscordMessageEvent(id, parser);
+                    }
+                }
             }
         }
     }
