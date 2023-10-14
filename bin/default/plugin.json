@@ -1,0 +1,10 @@
+{
+  "name": "ShardDustryCore",
+  "author": "Vector & Ark",
+  "main": "ShardDustry.ShardDustry",
+  "description": "Un plugin donde de autor se colo Ark.",
+  "version": 1.0,
+  "dependencies": [
+    "xpdustry-javelin"
+  ]
+}

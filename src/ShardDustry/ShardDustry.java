@@ -169,6 +169,12 @@ public class ShardDustry extends Plugin{
         }
     }
     
+    public static void sendMindustryCosaEvent(String serverID, String message){
+        if (JavelinPlugin.getJavelinSocket().getStatus() == JavelinSocket.Status.OPEN){
+            JavelinPlugin.getJavelinSocket().sendEvent(new MindustryCosaEvent(serverID,message));
+        }
+    }
+    
     public static final class MindustryChatEvent implements JavelinEvent {
 
         private final String channelID;
@@ -259,6 +265,25 @@ public class ShardDustry extends Plugin{
         }
         
         public String getMessage() {
+            return message;
+        }
+    }
+    
+    public static final class MindustryCosaEvent implements JavelinEvent {
+        
+        private final String serverID;
+        private final String message;
+        
+        public MindustryCosaEvent(final String serverID, final String message){
+            this.serverID = serverID;
+            this.message = message;
+        }
+        
+        public String getServerID(){
+            return serverID;
+        }
+        
+        public String getMessage(){
             return message;
         }
     }
