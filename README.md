@@ -1,7 +1,7 @@
-### Configuraciones
-Enfocado a describir los parametros confusos encontrados en ShardDustryCore.json
+### Configuraciones ShardDustryCore.json
 
 `discordGuild` contiene la id del servidor en el que el bot trabajará, solo puede ser uno
+
 
 `joinMessage` contiene el formato con el que se mostrarán los mensajes en discord al unirse dentro del juego, agrega {p} para mostrar el nombre del jugador y {pc} para mostrar la cantidad de jugadores
 
@@ -9,7 +9,11 @@ Enfocado a describir los parametros confusos encontrados en ShardDustryCore.json
 
 `leaveMessage` contiene el formato con el que se mostrarán los mensajes en discord al salir del juego, agrega {p} para mostrar el nombre del jugador y {pc} para mostrar la cantidad de jugadores
 
+`(joinMessage, chatMessage y leaveMessage tendrán el formatting de discord, por lo que se les puede agregar cosas como emojis del mismo servidor)`
+
 `discordMessage` contiene el formato con el que se mostrarán los mensajes dentro del juego al mandar un mensaje en el canal correspondiente de discord, agrega {a} para mostrar el nombre del autor y {m} para mostrar su mensaje
+
+`(discordMessage tendrá el formatting de mindustry, por lo que puedes agregar color al texto o iconos del juego)`
 
 `slashCommandAllowedRole` contiene la id del rol que permitirá hacer uso de los comandos slash especiales
 
