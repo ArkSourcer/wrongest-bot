@@ -22,3 +22,6 @@
 `connectionList` contendrá un arreglo de id's de canales que se considerarán interconectados con el juego, es decir, en los que los mensajes enviados llegarán a mindustry y viceversa.
 
 `serverIDList` contendrá un arreglo de id's o nombres de servidores, esto permitirá el uso de comandos slash al coincidir el id de este arreglo con el parametro propio en cada servidor
+
+### Configuraciones ShardDustryNode.json
+
