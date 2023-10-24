@@ -51,6 +51,7 @@ public class ShardDustry extends Plugin{
         DiscordBot bot = new DiscordBot();
         if (config.activeDiscordBot) {
             bot.init();
+            
         }
         
         JavelinSocket socket = JavelinPlugin.getJavelinSocket();
@@ -64,7 +65,7 @@ public class ShardDustry extends Plugin{
                 if (parser.contains("{m}")){
                     parser = parser.replace("{m}", e.getMessage());
                 }
-                bot.bot.getTextChannelById(e.getChannelID()).sendMessage(parser).queue();
+                DiscordBot.sendMessage(e.getChannelID(), parser);
             }
         });
         socket.subscribe(MindustryLeaveEvent.class, e -> {
@@ -76,7 +77,7 @@ public class ShardDustry extends Plugin{
                 if (parser.contains("{pc}")){
                     parser = parser.replace("{pc}", e.getPlayerCount()+"");
                 }
-                bot.bot.getTextChannelById(e.getChannelID()).sendMessage(parser).queue();
+                DiscordBot.sendMessage(e.getChannelID(), parser);
             }
         });
         socket.subscribe(MindustryJoinEvent.class, e -> {
@@ -88,13 +89,13 @@ public class ShardDustry extends Plugin{
                 if (parser.contains("{pc}")){
                     parser = parser.replace("{pc}", e.getPlayerCount()+"");
                 }
-                bot.bot.getTextChannelById(e.getChannelID()).sendMessage(parser).queue();
+                DiscordBot.sendMessage(e.getChannelID(), parser);
             }
         });
         
         socket.subscribe(MindustryExcecuteResponseEvent.class, e -> {
             if (config.activeDiscordBot) {
-                bot.bot.getTextChannelById(config.commandChannelID).sendMessage(e.getServerID() + ": " + e.getResponse()).queue();
+                DiscordBot.sendMessage(config.commandChannelID, e.getServerID() + ": " + e.getResponse());
             }
         });
         
@@ -143,14 +144,6 @@ public class ShardDustry extends Plugin{
                Log.err("Hubo un error al cargar el archivo de configuracion");
                Log.err(t);
            }
-        });
-        handler.register("start_discord_bot", "Inicia el bot de discord", args -> {
-            if (!config.activeDiscordBot){
-                Log.info("El bot no puede ser iniciado, se ha configurado para no hacerlo");
-                return;
-            }
-            DiscordBot bot = new DiscordBot();
-            bot.init();
         });
     }
 

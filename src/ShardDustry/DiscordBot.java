@@ -22,7 +22,7 @@ public class DiscordBot {
     public static JDA bot;
     private static Role slashCommandAllowedRole;
 
-    public void init() {
+    public static void init() {
         try {
             bot = JDABuilder.createDefault(config.discordToken)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
@@ -54,15 +54,6 @@ public class DiscordBot {
             Log.err(e);
         }
     }
-    
-    public static boolean gameInit = false;
-    public static String message = "";
-    public static String messageID = "";
-    public static int sizeX = 10;
-    public static int sizeY = 10;
-    public static int headY = 1;
-    public static int headX = 1;
-    public static int[][] gameGrid = new int[30][30];
 
     public static class MessageListener extends ListenerAdapter {
 
@@ -125,5 +116,9 @@ public class DiscordBot {
                     break;
             }
         }
+    }
+    
+    public static void sendMessage(String channel, String message) {
+        bot.getTextChannelById(channel).sendMessage(message).queue();
     }
 }
