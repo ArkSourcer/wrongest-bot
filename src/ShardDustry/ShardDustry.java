@@ -15,6 +15,7 @@ import com.google.gson.*;
 import fr.xpdustry.javelin.JavelinEvent;
 import fr.xpdustry.javelin.JavelinPlugin;
 import fr.xpdustry.javelin.JavelinSocket;
+import java.util.List;
 import static mindustry.Vars.dataDirectory;
 import mindustry.game.EventType;
         
@@ -22,6 +23,7 @@ public class ShardDustry extends Plugin{
 
     
     public static Config config;
+    
     
     public final Gson gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
@@ -90,6 +92,12 @@ public class ShardDustry extends Plugin{
             }
         });
         
+        socket.subscribe(MindustryExcecuteResponseEvent.class, e -> {
+            if (config.activeDiscordBot) {
+                bot.bot.getTextChannelById(config.commandChannelID).sendMessage(e.getServerID() + ": " + e.getResponse()).queue();
+            }
+        });
+        
         //listen for a block selection event
         Events.on(BuildSelectEvent.class, event -> {
             if(!event.breaking && event.builder != null && event.builder.buildPlan() != null && event.builder.buildPlan().block == Blocks.thoriumReactor && event.builder.isPlayer()){
@@ -136,6 +144,14 @@ public class ShardDustry extends Plugin{
                Log.err(t);
            }
         });
+        handler.register("start_discord_bot", "Inicia el bot de discord", args -> {
+            if (!config.activeDiscordBot){
+                Log.info("El bot no puede ser iniciado, se ha configurado para no hacerlo");
+                return;
+            }
+            DiscordBot bot = new DiscordBot();
+            bot.init();
+        });
     }
 
     //register commands that player can invoke in-game
@@ -172,6 +188,18 @@ public class ShardDustry extends Plugin{
     public static void sendMindustryCosaEvent(String serverID, String message){
         if (JavelinPlugin.getJavelinSocket().getStatus() == JavelinSocket.Status.OPEN){
             JavelinPlugin.getJavelinSocket().sendEvent(new MindustryCosaEvent(serverID,message));
+        }
+    }
+    
+    public static void sendMindustryInfoRequestEvent(String serverID, String identificador){
+        if (JavelinPlugin.getJavelinSocket().getStatus() == JavelinSocket.Status.OPEN){
+            JavelinPlugin.getJavelinSocket().sendEvent(new MindustryInfoRequestEvent(serverID,identificador));
+        }
+    }
+    
+    public static void sendMindustryExcecuteRequestEvent(String serverID, String code){
+        if (JavelinPlugin.getJavelinSocket().getStatus() == JavelinSocket.Status.OPEN){
+            JavelinPlugin.getJavelinSocket().sendEvent(new MindustryExcecuteRequestEvent(serverID,code));
         }
     }
     
@@ -285,6 +313,63 @@ public class ShardDustry extends Plugin{
         
         public String getMessage(){
             return message;
+        }
+    }
+    
+    public static final class MindustryInfoRequestEvent implements JavelinEvent {
+        
+        private final String serverID;
+        private final String identifier;
+        
+        public MindustryInfoRequestEvent(final String serverID, final String identifier){
+            this.serverID = serverID;
+            this.identifier = identifier;
+        }
+        
+        public String getServerID(){
+            return serverID;
+        }
+        
+        public String getIdentifier(){
+            return identifier;
+        }
+    }
+    
+    public static final class MindustryExcecuteRequestEvent implements JavelinEvent {
+        
+        private final String serverID;
+        private final String code;
+        
+        public MindustryExcecuteRequestEvent(final String serverID, final String code){
+            this.serverID = serverID;
+            this.code = code;
+        }
+        
+        public String getServerID(){
+            return serverID;
+        }
+        
+        public String getCode(){
+            return code;
+        }
+    }
+    
+    public static final class MindustryExcecuteResponseEvent implements JavelinEvent {
+        
+        private final String serverID;
+        private final String response;
+        
+        public MindustryExcecuteResponseEvent(final String serverID, final String response){
+            this.serverID = serverID;
+            this.response = response;
+        }
+        
+        public String getServerID(){
+            return serverID;
+        }
+        
+        public String getResponse(){
+            return response;
         }
     }
 }
