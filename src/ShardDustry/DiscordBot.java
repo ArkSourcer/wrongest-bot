@@ -2,9 +2,16 @@ package ShardDustry;
 
 import static ShardDustry.ShardDustry.config;
 import arc.util.*;
+import static arc.util.Time.time;
+import java.awt.Color;
+import java.time.Instant;
+import java.time.temporal.TemporalAccessor;
+import net.dv8tion.jda.api.EmbedBuilder;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -13,9 +20,12 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 
 public class DiscordBot {
 
@@ -45,7 +55,7 @@ public class DiscordBot {
                     Commands.slash("info", "Solicita informacion a un servidor")
                     .addOptions(opciones)
                     .addOption(OptionType.STRING, "identificador", "Identificador del jugador",true),
-                    Commands.slash("excecute", "Ejecuta un comando en algun servidor, no puedes recibir la respuesta del comando")
+                    Commands.slash("execute", "Ejecuta un comando en algun servidor, no puedes recibir la respuesta del comando")
                     .addOption(OptionType.STRING, "codigo", "comando a ser ejecutado",true)
                     .addOptions(opciones)
             ).queue();
@@ -79,10 +89,11 @@ public class DiscordBot {
             }
             for (String id : config.connectionList) {
                 if (id.equals(event.getChannel().getId())) {
-                    String parser = config.discordMessage;
-                    if (event.getMessage().getContentDisplay().isEmpty()) {
+                    
+                    if (event.getMessage().getContentDisplay().isEmpty() || event.getMessage().getContentDisplay().startsWith(config.discordMessageSilentPrefix)) {
                         return;
                     }
+                    String parser = config.discordMessage;
                     if (parser.contains("{a}")) {
                         parser = parser.replace("{a}", event.getAuthor().getName());
                     }
@@ -101,18 +112,22 @@ public class DiscordBot {
             //comandos de uso general
             switch (event.getName()){
                 case "say":
-                    event.getChannel().sendMessage(event.getOption("mensaje").getAsString()).queue();
-                    event.reply("escribiste " + event.getOption("mensaje").getAsString()).setEphemeral(true).queue();
+                    event.getChannel().sendMessage(event.getOption("mensaje").getAsString()).queue(e -> {
+                        event.getHook().deleteOriginal().queue();
+                    });
             }
             
-            if (!event.getMember().getRoles().contains(slashCommandAllowedRole)) return;
+            if (!event.getMember().getRoles().contains(slashCommandAllowedRole)) {
+                event.reply("No tienes el rol necesario para hacer uso de este comando, revisa que rol es necesario").setEphemeral(true).queue();
+                return;
+            }
             // comandos de accion en servidores
             switch (event.getName()){
                 case "info":
                     ShardDustry.sendMindustryInfoRequestEvent(event.getOption("servidor").getAsString(),event.getOption("identificador").getAsString());
                     break;
-                case "excecute":
-                    ShardDustry.sendMindustryExcecuteRequestEvent(event.getOption("servidor").getAsString(),event.getOption("codigo").getAsString());
+                case "execute":
+                    ShardDustry.sendMindustryExecuteRequestEvent(event.getOption("servidor").getAsString(),event.getOption("codigo").getAsString());
                     break;
             }
         }
@@ -120,5 +135,36 @@ public class DiscordBot {
     
     public static void sendMessage(String channel, String message) {
         bot.getTextChannelById(channel).sendMessage(message).queue();
+    }
+    
+    public static void sendMessageAsEmbed(String channel, String title, Color color, String author, String description, String[] fieldName, String[] fieldValue, String stateID){
+        EmbedBuilder embed = new EmbedBuilder();
+        if (title != null) embed.setTitle(title);
+        if (color != null) embed.setColor(color);
+        if (author != null) embed.setAuthor(author);
+        if (description != null) embed.setDescription(description);
+        embed.setTimestamp(Instant.now());
+        
+        try {
+            bot.getTextChannelById(channel).editMessageEmbedsById(stateID, embed.build()).queue(null, new ErrorHandler()
+            .handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> bot.getTextChannelById(channel).sendMessageEmbeds(embed.build()).queue(e -> {
+                ShardDustry.sendEditPropertyEvent("StateID", e.getId());
+            })));
+        }catch (Exception ex){
+            bot.getTextChannelById(channel).sendMessageEmbeds(embed.build()).queue(e -> {
+                ShardDustry.sendEditPropertyEvent("StateID", e.getId());
+            });
+        }
+    }
+    
+    public static void setDisabledStatus(String channel, String statusID){
+        try {
+            bot.getTextChannelById(statusID).retrieveMessageById(statusID).queue(message -> {
+                if (message.getEmbeds().isEmpty()) return;
+                message.getEmbeds().get(0).getTimestamp().get
+            });
+        }catch (Exception ex){
+            
+        }
     }
 }
