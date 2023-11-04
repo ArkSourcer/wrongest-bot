@@ -59,7 +59,6 @@ public class DiscordBot {
                     .addOption(OptionType.STRING, "codigo", "comando a ser ejecutado",true)
                     .addOptions(opciones)
             ).queue();
-
         } catch (Exception e) {
             Log.err(e);
         }
@@ -161,7 +160,7 @@ public class DiscordBot {
         try {
             bot.getTextChannelById(statusID).retrieveMessageById(statusID).queue(message -> {
                 if (message.getEmbeds().isEmpty()) return;
-                message.getEmbeds().get(0).getTimestamp().get
+                //message.getEmbeds().get(0).getTimestamp().plusMinutes(0)
             });
         }catch (Exception ex){
             

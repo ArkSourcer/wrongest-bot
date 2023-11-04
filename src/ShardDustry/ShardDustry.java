@@ -40,7 +40,7 @@ public class ShardDustry extends Plugin{
     public Fi cfg = dataDirectory.child(configPath);
     
     public final Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+            .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
             .setPrettyPrinting()
             .serializeNulls()
             .disableHtmlEscaping()
@@ -66,7 +66,7 @@ public class ShardDustry extends Plugin{
                 Log.err(t);
             }
         }
-
+        
         Timer timer = new Timer();
         
         if (config.activeDiscordBot) {
@@ -87,14 +87,14 @@ public class ShardDustry extends Plugin{
             @Override
             public void run() {
                 for (Object key : config.statusIDs.keySet()){
-                    
+                    DiscordBot.setDisabledStatus(config.commandChannelID,key.toString());
                 }
                 Log.info("Se reviso si se actualizo el mensaje");
             }
         };
         
-        timer.scheduleTask(serverStatus, 60,60,-1);
-        timer.scheduleTask(serverStatusCheck, 80,60,-1);
+        //timer.scheduleTask(serverStatus, 60,60,-1);
+        //timer.scheduleTask(serverStatusCheck, 80,60,-1);
         
         socket.subscribe(MindustryChatEvent.class, e -> {
             if (config.activeDiscordBot){
