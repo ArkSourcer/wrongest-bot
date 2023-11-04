@@ -195,14 +195,7 @@ public class JavelinClasses {
 
         }
     }
-    
-    public static final class MindustryStatusCheckEvent implements JavelinEvent {
 
-        public MindustryStatusCheckEvent() {
-
-        }
-    }
-    
     public static final class MindustryStatusResponseEvent implements JavelinEvent {
 
         private final String serverID;
