@@ -40,7 +40,7 @@ public class ShardDustry extends Plugin{
     public Fi cfg = dataDirectory.child(configPath);
     
     public final Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
+            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
             .setPrettyPrinting()
             .serializeNulls()
             .disableHtmlEscaping()
@@ -72,6 +72,31 @@ public class ShardDustry extends Plugin{
         if (config.activeDiscordBot) {
             DiscordBot.init();   
         }
+        
+        boolean newFields = false;
+        
+        Field[] fields = config.getClass().getDeclaredFields();
+        for (Field field: fields){
+            if (json.has(field.getName())) return;
+            newFields = true;
+            try {
+                json.add(field.getName(),gson.toJsonTree(field.get(config)));
+            } catch (IllegalArgumentException ex) {
+                Logger.getLogger(ShardDustry.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(ShardDustry.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            Log.info("Se anadio el field " + field.getName() + " debido a que no se encontraba en el archivo");
+        }
+        if (newFields) {
+            String jsonActualizado = gson.toJson(json);
+            if (cfg.exists()) {
+                cfg.writeString(jsonActualizado);
+            } else {
+                Log.info("No existe el documento");
+            }
+        }
+
         
         JavelinSocket socket = JavelinPlugin.getJavelinSocket();
         
