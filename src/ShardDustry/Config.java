@@ -14,6 +14,7 @@ public class Config {
     public String discordMessageSilentPrefix = "-";
     public String slashCommandAllowedRole = "";
     public String commandChannelID = "";
+    public String statusChannelID = "";
     public List<String> connectionList = Arrays.asList("1137044691100123136", "1151227393395142656");
     public List<String> serverIDList = Arrays.asList("pvp","ataque","sandbox");
     public boolean activeEmojiReact;

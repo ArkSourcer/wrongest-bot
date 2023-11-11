@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-### Setup
-=======
 ### Configuraciones ShardDustryCore.json
 
 `discordGuild` contiene la id del servidor en el que el bot trabajará, solo puede ser uno
@@ -27,5 +24,3 @@
 `serverIDList` contendrá un arreglo de id's o nombres de servidores, esto permitirá el uso de comandos slash al coincidir el id de este arreglo con el parametro propio en cada servidor
 
 ### Configuraciones ShardDustryNode.json
-
->>>>>>> ef196e5f550e2855c6782058bb4c5999ae27320e
