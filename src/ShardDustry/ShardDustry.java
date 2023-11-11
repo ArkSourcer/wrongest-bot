@@ -66,7 +66,7 @@ public class ShardDustry extends Plugin{
             if (!json.has(field.getName())) {
                 newFields = true;
                 try {
-                    json.add(field.getName(), gson.toJsonTree(field.get(config)));
+                    json.add(field.getName(), gson.toJsonTree(field.get(config),field.getType()));
                     Log.info("Se anadio el field " + field.getName() + " debido a que no se encontraba en el archivo");
                 } catch (IllegalArgumentException | IllegalAccessException ex) {
                     Log.err(ex);
@@ -101,62 +101,61 @@ public class ShardDustry extends Plugin{
         Task serverStatusCheck = new Task() {
             @Override
             public void run() {
-                for (Object key : config.statusIDs.keySet()){
-                    DiscordBot.setDisabledStatus(config.commandChannelID,key.toString());
+                for (Object key : config.statusIDs.values()) {
+                    DiscordBot.setDisabledStatus(config.commandChannelID, key.toString());
                 }
-                Log.info("Se reviso si se actualizo el mensaje");
             }
         };
-        
-        //timer.scheduleTask(serverStatus, 60,60,-1);
-        //timer.scheduleTask(serverStatusCheck, 80,60,-1);
+
+        timer.scheduleTask(serverStatus, 20,60,-1);
+        timer.scheduleTask(serverStatusCheck, 40,60,-1);
         
         socket.subscribe(MindustryChatEvent.class, e -> {
             if (config.activeDiscordBot){
                 String parser = config.chatMessage;
                 if (parser.contains("{p}")){
-                    parser = parser.replace("{p}", e.getPlayerName());
+                    parser = parser.replace("{p}", e.playerName);
                 }
                 if (parser.contains("{m}")){
-                    parser = parser.replace("{m}", e.getMessage());
+                    parser = parser.replace("{m}", e.message);
                 }
-                DiscordBot.sendMessage(e.getChannelID(), parser);
+                DiscordBot.sendMessage(e.channelID, parser);
             }
         });
         socket.subscribe(MindustryLeaveEvent.class, e -> {
             if (config.activeDiscordBot) {
                 String parser = config.leaveMessage;
                 if (parser.contains("{p}")){
-                    parser = parser.replace("{p}", e.getPlayerName());
+                    parser = parser.replace("{p}", e.playerName);
                 }
                 if (parser.contains("{pc}")){
-                    parser = parser.replace("{pc}", e.getPlayerCount()+"");
+                    parser = parser.replace("{pc}", e.playerCount+"");
                 }
-                DiscordBot.sendMessage(e.getChannelID(), parser);
+                DiscordBot.sendMessage(e.channelID, parser);
             }
         });
         socket.subscribe(MindustryJoinEvent.class, e -> {
             if (config.activeDiscordBot) {
                 String parser = config.joinMessage;
                 if (parser.contains("{p}")){
-                    parser = parser.replace("{p}", e.getPlayerName());
+                    parser = parser.replace("{p}", e.playerName);
                 }
                 if (parser.contains("{pc}")){
-                    parser = parser.replace("{pc}", e.getPlayerCount()+"");
+                    parser = parser.replace("{pc}", e.playerCount+"");
                 }
-                DiscordBot.sendMessage(e.getChannelID(), parser);
+                DiscordBot.sendMessage(e.channelID, parser);
             }
         });
         
         socket.subscribe(MindustryExecuteResponseEvent.class, e -> {
             if (config.activeDiscordBot) {
-                DiscordBot.sendMessage(config.commandChannelID, e.getServerID() + ": " + e.getResponse());
+                DiscordBot.sendMessage(config.commandChannelID, e.serverID + ": " + e.response);
             }
         });
         
         socket.subscribe(MindustryStatusResponseEvent.class, e -> {
-            DiscordBot.sendMessageAsEmbed(config.commandChannelID, "Estado del servidor: " + e.getServerID(), Color.green, null,
-                    "Mapa: " + e.getMapName() + "\n" + "Oleada: " + e.getWave() + "\n" + "Tiempo de Juego: " + e.getPlayedTime() + "\n" + "Jugadores: " + e.getPlayers(), null, null,e.getStateID());
+            DiscordBot.sendMessageAsEmbed(config.statusChannelID, "Estado del servidor: " + e.displayName, Color.green, null,
+                    "Mapa: " + e.mapName + "\n" + "Oleada: " + e.wave + "\n" + "Tiempo de Juego: " + e.playedTime + "\n" + "Jugadores: " + e.players, null, null,e.stateID);
             Log.info("La informacion fue mostrada");
         });
     }
@@ -234,7 +233,6 @@ public class ShardDustry extends Plugin{
         });
         
         handler.register("configvalues", "muestra la lista de parametros con sus valores", args -> {
-            Field[] fields = config.getClass().getDeclaredFields();
             Set<Map.Entry<String, JsonElement>> entrySet = json.entrySet();
                for (Map.Entry<String, JsonElement> entry : entrySet) {
                 String key = entry.getKey();
@@ -261,12 +259,6 @@ public class ShardDustry extends Plugin{
     public static void sendDiscordMessageEvent(String channelID, String message){
         if (isJavelinOpen()){
             JavelinPlugin.getJavelinSocket().sendEvent(new DiscordMessageEvent(channelID,message));
-        }
-    }
-    
-    public static void sendMindustryCosaEvent(String serverID, String message){
-        if (isJavelinOpen()){
-            JavelinPlugin.getJavelinSocket().sendEvent(new MindustryCosaEvent(serverID,message));
         }
     }
     
