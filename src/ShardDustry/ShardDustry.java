@@ -90,25 +90,25 @@ public class ShardDustry extends Plugin{
         
         JavelinSocket socket = JavelinPlugin.getJavelinSocket();
         
-        Task serverStatus = new Task() {
-            @Override
-            public void run() {
-                socket.sendEvent(new MindustryStatusRequestEvent());
-                Log.info("Fue enviado un evento de solicitud de estado");
-                
-            }
-        };
-        Task serverStatusCheck = new Task() {
-            @Override
-            public void run() {
-                for (Object key : config.statusIDs.values()) {
-                    DiscordBot.setDisabledStatus(config.commandChannelID, key.toString());
+        if (config.activeStatusCheck) {
+            Task serverStatus = new Task() {
+                @Override
+                public void run() {
+                    socket.sendEvent(new MindustryStatusRequestEvent());
+                    Log.debug("Fue enviado un evento de solicitud de estado");
                 }
-            }
-        };
-
-        timer.scheduleTask(serverStatus, 20,60,-1);
-        timer.scheduleTask(serverStatusCheck, 40,60,-1);
+            };
+            Task serverStatusCheck = new Task() {
+                @Override
+                public void run() {
+                    for (Object key : config.statusIDs.values()) {
+                        DiscordBot.setDisabledStatus(key.toString());
+                    }
+                }
+            };
+            timer.scheduleTask(serverStatus, 20, 60, -1);
+            timer.scheduleTask(serverStatusCheck, 40, 60, -1);
+        }
         
         socket.subscribe(MindustryChatEvent.class, e -> {
             if (config.activeDiscordBot){
@@ -154,9 +154,13 @@ public class ShardDustry extends Plugin{
         });
         
         socket.subscribe(MindustryStatusResponseEvent.class, e -> {
-            DiscordBot.sendMessageAsEmbed(config.statusChannelID, "Estado del servidor: " + e.displayName, Color.green, null,
+            Log.debug("Se recibio el estado de un servidor: " + e.displayName);
+            DiscordBot.sendMessageAsEmbed(config.statusChannelID, e.displayName, Color.green, null,
                     "Mapa: " + e.mapName + "\n" + "Oleada: " + e.wave + "\n" + "Tiempo de Juego: " + e.playedTime + "\n" + "Jugadores: " + e.players, null, null,e.stateID);
-            Log.info("La informacion fue mostrada");
+        });
+        
+        socket.subscribe(PropertyListResponseEvent.class, e -> {
+            DiscordBot.sendMessageAsEmbedL(config.commandChannelID, e.serverID, Color.CYAN, "ShardDustry", e.params);
         });
     }
     //register commands that run on the server
@@ -252,6 +256,29 @@ public class ShardDustry extends Plugin{
         }
     }
     
+    public boolean editProperty(String property, String value, String dataType){
+        switch(dataType){
+            
+            case "boolean":
+                
+                break;
+                
+            case "integer":
+                
+                break;
+                
+            case "string":
+                
+                break;
+                
+            case "array":
+                
+                break;
+        }
+        
+        return true;
+    }
+    
     public static boolean isJavelinOpen(){
         return JavelinPlugin.getJavelinSocket().getStatus() == JavelinSocket.Status.OPEN;
     }
@@ -277,6 +304,12 @@ public class ShardDustry extends Plugin{
     public static void sendEditPropertyEvent(String property, String value){
         if (isJavelinOpen()){
             JavelinPlugin.getJavelinSocket().sendEvent(new EditPropertyEvent(property, value));
+        }
+    }
+    
+    public static void sendPropertyListRequestEvent(String serverID){
+        if (isJavelinOpen()){
+            JavelinPlugin.getJavelinSocket().sendEvent(new PropertyListRequestEvent(serverID));
         }
     }
 

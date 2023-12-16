@@ -5,7 +5,7 @@ logs/
 /core/assets/.gifimages/
 /deploy/
 /desktop/packr-out/
-/desktop/packr-export/
+/desktop/packr-export/ 
 /desktop/mindustry-saves/
 /desktop/mindustry-maps/
 /desktop/gifexport/

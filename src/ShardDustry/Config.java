@@ -14,19 +14,26 @@ public class Config {
     public String discordMessageSilentPrefix = "-";
     public String slashCommandAllowedRole = "";
     public String commandChannelID = "";
-    public String statusChannelID = "";
+    
     public List<String> connectionList = Arrays.asList("1137044691100123136", "1151227393395142656");
     public List<String> serverIDList = Arrays.asList("pvp","ataque","sandbox");
-    public boolean activeEmojiReact;
+    
+    public boolean activeStatusCheck = false;
+    public String statusChannelID = "";
     public HashMap<String, String> statusIDs = new HashMap<String, String>(){{
         put("server1","valor1");
         put("server2","valor2");
     }};
     
+    public boolean activeEmojiReact;
     public List<EmojiReactor> emojiReact = Arrays.asList(
             new EmojiReactor(1, "egg", "U+1F95A"),
             new EmojiReactor(1, "ega", "U+1F383"),
             new EmojiReactor(2, "que", "so")
     );
     
+    public boolean activeExternalEmojis = false;
+    public String externalEmojisGuild = "";
+    public String externalEmojisPrefix = "";
+    public String externalEmojisLogChannel = "";
 }

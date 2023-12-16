@@ -5,15 +5,15 @@ import arc.util.*;
 import static arc.util.Time.time;
 import java.awt.Color;
 import java.time.Instant;
-import java.time.temporal.TemporalAccessor;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import net.dv8tion.jda.api.EmbedBuilder;
-
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -21,7 +21,6 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -44,20 +43,32 @@ public class DiscordBot {
             bot.addEventListener(new MessageListener());
             bot.addEventListener(new CommandListener());
             slashCommandAllowedRole = bot.getRoleById(config.slashCommandAllowedRole);
-            OptionData opciones = new OptionData(OptionType.STRING,"servidor","servidor para actuar",true);
-            for (String id : config.serverIDList){
-                opciones.addChoice(id.toUpperCase(), id);
+            updateCommands();
+        } catch (Exception e) {
+            Log.err(e);
+        }
+    }
+    
+    public static void updateCommands() {
+        try {
+            OptionData servers = new OptionData(OptionType.STRING, "servidor", "servidor para actuar", true);
+            for (String id : config.serverIDList) {
+                servers.addChoice(id.toUpperCase(), id);
             }
-            opciones.addChoice("GLOBAL", "global");
-            bot.getGuildById(config.discordGuild).updateCommands().addCommands(
-                    Commands.slash("say", "Ecribe un mensaje como el bot")
-                    .addOption(OptionType.STRING, "mensaje", "mensaje a enviar",true),
+            servers.addChoice("GLOBAL", "global");
+            
+            bot.getGuildById(config.discordGuild).updateCommands().addCommands(Commands.slash("say", "Escribe un mensaje como el bot")
+                    .addOption(OptionType.STRING, "mensaje", "mensaje a enviar", true),
                     Commands.slash("info", "Solicita informacion a un servidor")
-                    .addOptions(opciones)
-                    .addOption(OptionType.STRING, "identificador", "Identificador del jugador",true),
+                            .addOptions(servers)
+                            .addOption(OptionType.STRING, "identificador", "Identificador del jugador", true),
                     Commands.slash("execute", "Ejecuta un comando en algun servidor, no puedes recibir la respuesta del comando")
-                    .addOption(OptionType.STRING, "codigo", "comando a ser ejecutado",true)
-                    .addOptions(opciones)
+                            .addOption(OptionType.STRING, "codigo", "comando a ser ejecutado", true)
+                            .addOptions(servers)
+                    /*Commands.slash("setcomchannel", "Establece un canal para comunicaciones con un servidor")
+                            .addOptions(servers),
+                    Commands.slash("paramlist", "Obtiene la lista de parametros de la configuracion de un servidor")
+                            .addOptions(servers)*/
             ).queue();
         } catch (Exception e) {
             Log.err(e);
@@ -85,6 +96,37 @@ public class DiscordBot {
                         }
                     }
                 }
+            }
+            if (config.activeExternalEmojis){
+                Guild guild = bot.getGuildById(config.externalEmojisGuild);
+                String content = event.getMessage().getContentRaw();
+                if (content.startsWith(config.externalEmojisPrefix+"emojis")){
+                    EmbedBuilder embed = new EmbedBuilder();
+                    embed.setTitle("Lista de emojis de " + guild.getName());
+                    String description = "";
+                    for (RichCustomEmoji emoji : guild.getEmojis()){
+                        description = description + "`+" + emoji.getName() + "` " + emoji.getFormatted() + " ";
+                    }
+                    embed.setDescription(description);
+                    embed.setTimestamp(Instant.now());
+                    embed.setThumbnail(guild.getIconUrl());
+                    embed.setAuthor(bot.getSelfUser().getName());
+                    embed.setFooter("los emojis pueden o no usar mayusculas");
+                    embed.setColor(Color.yellow);
+                    event.getChannel().sendMessage("Lista cargada correctamente").queue(e->{
+                        e.editMessageEmbeds(embed.build()).queue();
+                    });
+                }
+                if (content.startsWith(config.externalEmojisPrefix)){
+                    if (!guild.getEmojisByName(content.replace("+",""),true).isEmpty()){
+                        event.getMessage().delete().queue(e->{
+                            String name = guild.getEmojisByName(content.replace("+",""),true).get(0).getName();
+                            event.getChannel().sendMessage(guild.getEmojisByName(content.replace("+", ""), true).get(0).getFormatted()).queue();
+                            bot.getTextChannelById(config.externalEmojisLogChannel).sendMessage(event.getMember().getEffectiveName() + " ha usado el emoji +" + name).queue();
+                        });
+                    }
+                }
+                return;
             }
             for (String id : config.connectionList) {
                 if (id.equals(event.getChannel().getId())) {
@@ -114,6 +156,7 @@ public class DiscordBot {
                     event.getChannel().sendMessage(event.getOption("mensaje").getAsString()).queue(e -> {
                         event.getHook().deleteOriginal().queue();
                     });
+                    break;
             }
             
             if (!event.getMember().getRoles().contains(slashCommandAllowedRole)) {
@@ -127,6 +170,12 @@ public class DiscordBot {
                     break;
                 case "execute":
                     ShardDustry.sendMindustryExecuteRequestEvent(event.getOption("servidor").getAsString(),event.getOption("codigo").getAsString());
+                    break;
+                case "paramlist":
+                    ShardDustry.sendPropertyListRequestEvent(event.getOption("servidor").getAsString());
+                    break;
+                case "setcomchannel":
+                    
                     break;
             }
         }
@@ -147,21 +196,37 @@ public class DiscordBot {
         try {
             bot.getTextChannelById(channel).editMessageEmbedsById(stateID, embed.build()).queue(null, new ErrorHandler()
             .handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> bot.getTextChannelById(channel).sendMessageEmbeds(embed.build()).queue(e -> {
-                ShardDustry.sendEditPropertyEvent("StateID", e.getId());
+                ShardDustry.sendEditPropertyEvent("stateID", e.getId());
             })));
         }catch (Exception ex){
             bot.getTextChannelById(channel).sendMessageEmbeds(embed.build()).queue(e -> {
-                ShardDustry.sendEditPropertyEvent("StateID", e.getId());
+                ShardDustry.sendEditPropertyEvent("stateID", e.getId());
             });
         }
     }
     
-    public static void setDisabledStatus(String channel, String statusID){
+    public static void sendMessageAsEmbedL(String channel, String title, Color color, String author, String description){
+        EmbedBuilder embed = new EmbedBuilder();
+        if (title != null) embed.setTitle(title);
+        if (color != null) embed.setColor(color);
+        if (author != null) embed.setAuthor(author);
+        if (description != null) embed.setDescription(description);
+        embed.setTimestamp(Instant.now());
+        bot.getTextChannelById(channel).sendMessageEmbeds(embed.build()).queue();
+    }
+    
+    public static void setDisabledStatus(String statusID){
         try {
-            bot.getTextChannelById(statusID).retrieveMessageById(statusID).queue(message -> {
+            bot.getTextChannelById(config.statusChannelID).retrieveMessageById(statusID).queue(message -> {
                 if (message.getEmbeds().isEmpty()) return;
-                //message.getEmbeds().get(0).getTimestamp().plusMinutes(0)
-            });
+                if (!message.getEmbeds().get(0).getTimestamp().plusMinutes(1).isAfter(Instant.now().atOffset(ZoneOffset.UTC))){
+                    EmbedBuilder embed = new EmbedBuilder();
+                    embed.setColor(Color.red);
+                    embed.setTitle(message.getEmbeds().get(0).getTitle().replace("(offline)", "")+"(offline)");
+                    embed.setTimestamp(message.getEmbeds().get(0).getTimestamp());
+                    message.editMessageEmbeds(embed.build()).queue();
+                }
+            }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MESSAGE, e -> {}));
         }catch (Exception ex){
             
         }
