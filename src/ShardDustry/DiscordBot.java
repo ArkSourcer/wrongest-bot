@@ -194,13 +194,17 @@ public class DiscordBot {
         embed.setTimestamp(Instant.now());
         
         try {
-            bot.getTextChannelById(channel).editMessageEmbedsById(stateID, embed.build()).queue(null, new ErrorHandler()
+            bot.getTextChannelById(channel).editMessageEmbedsById(stateID, embed.build()).queue(e -> {
+                ShardDustry.addServerKey(title, stateID);
+            }, new ErrorHandler()
             .handle(ErrorResponse.UNKNOWN_MESSAGE, (error) -> bot.getTextChannelById(channel).sendMessageEmbeds(embed.build()).queue(e -> {
                 ShardDustry.sendEditPropertyEvent("stateID", e.getId());
+                ShardDustry.addServerKey(title,e.getId());
             })));
         }catch (Exception ex){
             bot.getTextChannelById(channel).sendMessageEmbeds(embed.build()).queue(e -> {
-                ShardDustry.sendEditPropertyEvent("stateID", e.getId());
+                ShardDustry.sendEditPropertyEvent("stateID", e.getId());    
+                ShardDustry.addServerKey(title,e.getId());
             });
         }
     }
@@ -215,14 +219,14 @@ public class DiscordBot {
         bot.getTextChannelById(channel).sendMessageEmbeds(embed.build()).queue();
     }
     
-    public static void setDisabledStatus(String statusID){
+    public static void setDisabledStatus(String server, String statusID, int statusCooldown){
         try {
             bot.getTextChannelById(config.statusChannelID).retrieveMessageById(statusID).queue(message -> {
                 if (message.getEmbeds().isEmpty()) return;
-                if (!message.getEmbeds().get(0).getTimestamp().plusMinutes(1).isAfter(Instant.now().atOffset(ZoneOffset.UTC))){
+                if (!message.getEmbeds().get(0).getTimestamp().plusMinutes(statusCooldown).isAfter(Instant.now().atOffset(ZoneOffset.UTC))){
                     EmbedBuilder embed = new EmbedBuilder();
                     embed.setColor(Color.red);
-                    embed.setTitle(message.getEmbeds().get(0).getTitle().replace("(offline)", "")+"(offline)");
+                    embed.setTitle(server + " (offline)");
                     embed.setTimestamp(message.getEmbeds().get(0).getTimestamp());
                     message.editMessageEmbeds(embed.build()).queue();
                 }

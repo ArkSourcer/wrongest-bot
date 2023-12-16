@@ -26,11 +26,11 @@ import java.util.Set;
         
 public class ShardDustry extends Plugin{
 
-    public String configPath = "mods/ShardDustryCore.json";
+    public static String configPath = "mods/ShardDustryCore.json";
     public static Config config;
-    public Fi cfg = dataDirectory.child(configPath);
+    public static Fi cfg = dataDirectory.child(configPath);
     
-    public final Gson gson = new GsonBuilder()
+    public static final Gson gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
             .setPrettyPrinting()
             .serializeNulls()
@@ -85,7 +85,7 @@ public class ShardDustry extends Plugin{
         }
         
         if (config.activeDiscordBot) {
-            DiscordBot.init();   
+            DiscordBot.init();
         }
         
         JavelinSocket socket = JavelinPlugin.getJavelinSocket();
@@ -101,13 +101,13 @@ public class ShardDustry extends Plugin{
             Task serverStatusCheck = new Task() {
                 @Override
                 public void run() {
-                    for (Object key : config.statusIDs.values()) {
-                        DiscordBot.setDisabledStatus(key.toString());
+                    for (Map.Entry<String, String> entry : config.statusIDs.entrySet()) {
+                        DiscordBot.setDisabledStatus(entry.getKey(),entry.getValue(),config.statusCooldownMinutes);
                     }
                 }
             };
-            timer.scheduleTask(serverStatus, 20, 60, -1);
-            timer.scheduleTask(serverStatusCheck, 40, 60, -1);
+            timer.scheduleTask(serverStatus, 20, config.statusCooldownMinutes*60, -1);
+            timer.scheduleTask(serverStatusCheck, 40, config.statusCooldownMinutes*60, -1);
         }
         
         socket.subscribe(MindustryChatEvent.class, e -> {
@@ -247,13 +247,32 @@ public class ShardDustry extends Plugin{
         });
     }
     
-    public void reloadConfig(){
+    public static void reloadConfig(){
         try {
             config = gson.fromJson(dataDirectory.child(configPath).readString(), Config.class);
         } catch (Throwable t) {
             Log.err("Hubo un error al cargar el archivo de configuracion");
             Log.err(t);
         }
+    }
+    public static void writeConfig() {
+        try {
+            String jsonActualizado = gson.toJson(json);
+            if (cfg.exists()) {
+                cfg.writeString(jsonActualizado);
+                reloadConfig();
+            } else {
+                Log.info("No existe el documento");
+            }
+        } catch (Exception e) {
+            Log.info(e);
+        }
+    }
+    
+    public static void addServerKey(String key, String value){
+        config.statusIDs.putIfAbsent(key, value);
+        json.add("statusIDs", gson.toJsonTree(config.statusIDs, config.statusIDs.getClass()));
+        writeConfig();
     }
     
     public boolean editProperty(String property, String value, String dataType){

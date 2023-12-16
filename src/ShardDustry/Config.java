@@ -20,6 +20,7 @@ public class Config {
     
     public boolean activeStatusCheck = false;
     public String statusChannelID = "";
+    public int statusCooldownMinutes = 1;
     public HashMap<String, String> statusIDs = new HashMap<String, String>(){{
         put("server1","valor1");
         put("server2","valor2");
