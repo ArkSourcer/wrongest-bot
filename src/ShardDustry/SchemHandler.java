@@ -62,6 +62,8 @@ public class ContentHandler{
             }
         }
 
+//lectura de los bloques
+
         String assets = "../Mindustry/core/assets/";
         Vars.state = new GameState();
 
@@ -116,7 +118,7 @@ public class ContentHandler{
 
             @Override
             protected void draw(Texture texture, float[] spriteVertices, int offset, int count){
-                //do nothing
+                //nada
             }
         };
 
