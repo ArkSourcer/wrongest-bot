@@ -1,4 +1,4 @@
-import type { ItemName } from 'mindustry-schematic-parser';
+import type { ItemName } from 'wrongest-bot';
 //caracter..
 export const items: ItemName[] = [
   'copper',
