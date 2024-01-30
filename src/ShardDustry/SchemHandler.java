@@ -181,7 +181,7 @@ public class ContentHandler{
     }
 
     public Schematic parseSchematicURL(String text) throws Exception{
-        return read(CoreBot.net.download(text));
+        return read(ShardDustry.net.download(text));
     }
 
     static Schematic read(InputStream input) throws IOException{
